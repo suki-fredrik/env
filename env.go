@@ -170,15 +170,32 @@ func get(field reflect.StructField) (string, error) {
 	}
 
 	if len(opts) > 0 {
+		required := false
+		notAllowEmpty := false
 		for _, opt := range opts {
-			// The only option supported is "required".
+			// The only option supported is "required" and "notAllowEmpty".
 			switch opt {
 			case "":
 				break
 			case "required":
-				val, err = getRequired(key)
+				required = true
+			case "notAllowEmpty":
+				notAllowEmpty = true
 			default:
 				err = fmt.Errorf("env: tag option %q not supported", opt)
+			}
+		}
+
+		if required && notAllowEmpty {
+			val, err = getRequired(key)
+			if err == nil && val == "" {
+				err = fmt.Errorf("env: not allow empty environment variable %q is empty", key)
+			}
+		} else if required && !notAllowEmpty {
+			val, err = getRequired(key)
+		} else if !required && notAllowEmpty {
+			if value, ok := os.LookupEnv(key); ok && value == "" {
+				err = fmt.Errorf("env: not allow empty environment variable %q is empty", key)
 			}
 		}
 	}
