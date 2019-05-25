@@ -635,6 +635,40 @@ func TestErrorRequiredNotSet(t *testing.T) {
 	assert.EqualError(t, Parse(cfg), "env: required environment variable \"IS_REQUIRED\" is not set")
 }
 
+func TestNoErrorRequiredAndNotAllowEmptySet(t *testing.T) {
+	type config struct {
+		IsRequiredAndNotAllowEmpty string `env:"IS_REQUIRED_AND_NOT_ALLOW_EMPTY,requiredAndNotAllowEmpty"`
+	}
+
+	cfg := &config{}
+
+	os.Setenv("IS_REQUIRED_AND_NOT_ALLOW_EMPTY", "VALUE")
+	defer os.Clearenv()
+	assert.NoError(t, Parse(cfg))
+	assert.Equal(t, "VALUE", cfg.IsRequiredAndNotAllowEmpty)
+}
+
+func TestErrorRequiredAndNotAllowEmptyEmptySet(t *testing.T) {
+	type config struct {
+		IsRequiredAndNotAllowEmpty string `env:"IS_REQUIRED_AND_NOT_ALLOW_EMPTY,requiredAndNotAllowEmpty"`
+	}
+
+	cfg := &config{}
+
+	os.Setenv("IS_REQUIRED_AND_NOT_ALLOW_EMPTY", "")
+	defer os.Clearenv()
+	assert.EqualError(t, Parse(cfg), "env: not allow empty environment variable \"IS_REQUIRED_AND_NOT_ALLOW_EMPTY\" is empty")
+}
+
+func TestErrorRequiredAndNotAllowEmptyNotSet(t *testing.T) {
+	type config struct {
+		IsRequiredAndNotAllowEmpty string `env:"IS_REQUIRED_AND_NOT_ALLOW_EMPTY,requiredAndNotAllowEmpty"`
+	}
+
+	cfg := &config{}
+	assert.EqualError(t, Parse(cfg), "env: not allow empty environment variable \"IS_REQUIRED_AND_NOT_ALLOW_EMPTY\" is empty")
+}
+
 func TestParseExpandOption(t *testing.T) {
 	type config struct {
 		Host        string `env:"HOST" envDefault:"localhost"`
